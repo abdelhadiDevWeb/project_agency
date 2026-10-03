@@ -13,10 +13,10 @@ const envSchema = Joi.object({
 
   // JWT auth
   JWT_ACCESS_SECRET: Joi.string().min(32).required(),
-  JWT_ISSUER: Joi.string().default("project_election"),
-  JWT_AUDIENCE: Joi.string().default("project_election"),
+  JWT_ISSUER: Joi.string().default("agency_vo"),
+  JWT_AUDIENCE: Joi.string().default("agency_vo"),
 
-  // Cookie / CSRF (only required if you enable CSRF below)
+  // Cookie / CSRF (required for signed cookies even if CSRF is off)
   COOKIE_SECRET: Joi.string().min(32).required(),
   CSRF_ENABLED: Joi.boolean().default(false),
 
@@ -25,12 +25,24 @@ const envSchema = Joi.object({
     .try(Joi.boolean(), Joi.number().integer().min(0).max(10), Joi.string())
     .default(false),
 
-  // Socket security
+  // Socket security — prefer true in production
   SOCKET_REQUIRE_AUTH: Joi.boolean().default(false),
 
+  // Demo POST /api/auth/token — forced off in production unless explicitly true (still blocked)
+  ALLOW_DEMO_AUTH: Joi.boolean().default(true),
+
+  // First super admin, created on boot only if no admin with this email exists yet
+  DEFAULT_ADMIN_EMAIL: Joi.string().trim().lowercase().email().optional(),
+  DEFAULT_ADMIN_PASSWORD: Joi.string().min(8).max(128).optional(),
+  DEFAULT_ADMIN_NAME: Joi.string().trim().max(120).default("Super Admin"),
+
   // Redis (recommended for scaling across multiple instances)
-  REDIS_URL: Joi.string().uri().optional(),
   REDIS_ENABLED: Joi.boolean().default(false),
+  REDIS_URL: Joi.when("REDIS_ENABLED", {
+    is: true,
+    then: Joi.string().uri().required(),
+    otherwise: Joi.string().uri().optional(),
+  }),
 }).unknown(true);
 
 const { value, error } = envSchema.validate(process.env, {
@@ -51,9 +63,16 @@ function parseOrigins(input: string): string[] {
     .filter(Boolean);
 }
 
+const nodeEnv = value.NODE_ENV as "development" | "test" | "production";
+const isProd = nodeEnv === "production";
+
+// Fail-closed in production: never mint demo tokens; always require socket JWT.
+const allowDemoAuth = isProd ? false : (value.ALLOW_DEMO_AUTH as boolean);
+const socketRequireAuth = isProd ? true : (value.SOCKET_REQUIRE_AUTH as boolean);
+
 export const env = {
-  nodeEnv: value.NODE_ENV as "development" | "test" | "production",
-  isProd: value.NODE_ENV === "production",
+  nodeEnv,
+  isProd,
   port: value.PORT as number,
   mongoUri: value.MONGODB_URI as string,
   corsOrigins: parseOrigins(value.CORS_ORIGINS as string),
@@ -68,11 +87,17 @@ export const env = {
   cookieSecret: value.COOKIE_SECRET as string,
   csrfEnabled: value.CSRF_ENABLED as boolean,
 
-  socketRequireAuth: value.SOCKET_REQUIRE_AUTH as boolean,
+  socketRequireAuth,
+  allowDemoAuth,
+
+  defaultAdmin: {
+    email: value.DEFAULT_ADMIN_EMAIL as string | undefined,
+    password: value.DEFAULT_ADMIN_PASSWORD as string | undefined,
+    name: value.DEFAULT_ADMIN_NAME as string,
+  },
 
   redis: {
     enabled: value.REDIS_ENABLED as boolean,
     url: value.REDIS_URL as string | undefined,
   },
 };
-

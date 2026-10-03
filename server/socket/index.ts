@@ -5,8 +5,10 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 import { getRedis } from "../db/redis";
 
+let io: Server | null = null;
+
 export function initSocket(server: HttpServer): Server {
-  const io = new Server(server, {
+  io = new Server(server, {
     cors: {
       origin: env.corsOrigins,
       credentials: true,
@@ -14,10 +16,12 @@ export function initSocket(server: HttpServer): Server {
   });
 
   // Scale Socket.IO across multiple instances via Redis pub/sub.
+  // Callers must await connectRedis() before initSocket when Redis is enabled.
   const redis = getRedis();
   if (redis) {
     const pubClient = redis;
     const subClient = redis.duplicate();
+    void subClient.connect().catch(() => {});
     io.adapter(createAdapter(pubClient, subClient));
   }
 
@@ -27,7 +31,14 @@ export function initSocket(server: HttpServer): Server {
     if (typeof token !== "string" || token.length < 1) return next(new Error("Unauthorized"));
 
     try {
-      jwt.verify(token, env.jwt.accessSecret, { issuer: env.jwt.issuer, audience: env.jwt.audience });
+      const decoded = jwt.verify(token, env.jwt.accessSecret, {
+        issuer: env.jwt.issuer,
+        audience: env.jwt.audience,
+      }) as jwt.JwtPayload;
+      socket.data.user = {
+        sub: decoded.sub,
+        roles: Array.isArray(decoded.roles) ? decoded.roles : undefined,
+      };
       return next();
     } catch {
       return next(new Error("Unauthorized"));
@@ -41,3 +52,11 @@ export function initSocket(server: HttpServer): Server {
   return io;
 }
 
+export async function closeSocket(): Promise<void> {
+  if (!io) return;
+  const current = io;
+  io = null;
+  await new Promise<void>((resolve) => {
+    current.close(() => resolve());
+  });
+}

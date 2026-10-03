@@ -1,6 +1,28 @@
-import type { RequestHandler } from "express";
+import type { CookieOptions, RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
+
+export const ACCESS_COOKIE = "access_token";
+const SESSION_TTL_SECONDS = 8 * 60 * 60;
+
+export function sessionCookieOptions(): CookieOptions {
+  return {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: env.isProd,
+    path: "/",
+    maxAge: SESSION_TTL_SECONDS * 1000,
+  };
+}
+
+export function signAccessToken(subject: string, roles: string[]): string {
+  return jwt.sign({ roles }, env.jwt.accessSecret, {
+    subject,
+    issuer: env.jwt.issuer,
+    audience: env.jwt.audience,
+    expiresIn: SESSION_TTL_SECONDS,
+  });
+}
 
 export type JwtUser = {
   sub: string;
@@ -25,7 +47,9 @@ function getBearerToken(authHeader: unknown): string | null {
 }
 
 export const requireAuth: RequestHandler = (req, res, next) => {
-  const token = getBearerToken(req.headers.authorization);
+  const cookieToken: unknown = req.cookies?.[ACCESS_COOKIE];
+  const token =
+    getBearerToken(req.headers.authorization) ?? (typeof cookieToken === "string" && cookieToken ? cookieToken : null);
   if (!token) return res.status(401).json({ ok: false, message: "Missing token" });
 
   try {
@@ -42,10 +66,12 @@ export const requireAuth: RequestHandler = (req, res, next) => {
   }
 };
 
-export function requireRole(role: string): RequestHandler {
+export function requireRole(...allowed: string[]): RequestHandler {
   return (req, res, next) => {
     const roles = req.user?.roles ?? [];
-    if (!roles.includes(role)) return res.status(403).json({ ok: false, message: "Forbidden" });
+    if (!roles.some((role) => allowed.includes(role))) {
+      return res.status(403).json({ ok: false, message: "Forbidden" });
+    }
     return next();
   };
 }

@@ -9,7 +9,7 @@ export async function connectMongo(): Promise<void> {
   });
 
   // MongoDB only shows a database after the first write.
-  // This upsert ensures the configured DB (e.g. `election`) is created/visible.
+  // This upsert ensures the configured DB (e.g. `agency_vo`) is created/visible.
   const db = mongoose.connection.db;
   if (db) {
     await db
