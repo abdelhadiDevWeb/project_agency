@@ -29,3 +29,12 @@ export const authLimiter = rateLimit({
   store: redisStoreIfEnabled(),
 });
 
+export const uploadLimiter = rateLimit({
+  limit: 20,
+  windowMs: 60 * 1000,
+  message: "Too many uploads",
+  legacyHeaders: false,
+  standardHeaders: "draft-7",
+  store: redisStoreIfEnabled(),
+});
+

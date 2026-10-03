@@ -81,6 +81,155 @@ function series(millions: number[]): MonthlyPoint[] {
 export const PLATFORM_MONTHLY = series([16.2, 18.9, 21.4, 17.8, 19.6, 22.3, 24.1, 27.8, 31.5, 33.2, 28.4, 26.3]);
 export const AGENCY_MONTHLY = series([5.1, 6.2, 7.4, 5.9, 6.8, 7.9, 8.6, 9.8, 11.2, 11.9, 8.45, 7.2]);
 
+export const MONTH_LABELS = LAST_12_MONTHS;
+
+/** Current agency, same 12 months one year earlier, in DA. */
+export const AGENCY_MONTHLY_PREVIOUS = series([4.3, 5.0, 6.1, 4.9, 5.6, 6.5, 7.1, 8.1, 9.2, 9.9, 6.9, 5.9]);
+export const AGENCY_MONTHLY_BOOKINGS = [22, 27, 32, 25, 29, 34, 37, 42, 48, 51, 36, 29];
+export const AGENCY_MONTHLY_BOOKINGS_PREVIOUS = [19, 24, 28, 22, 25, 30, 32, 37, 42, 44, 31, 25];
+export const AGENCY_MONTHLY_CANCELLATIONS = [1, 2, 1, 1, 2, 1, 2, 2, 3, 2, 2, 1];
+export const AGENCY_NEW_CUSTOMERS = [15, 18, 20, 16, 18, 21, 22, 25, 28, 29, 21, 17];
+export const AGENCY_RETURNING_CUSTOMERS = [5, 7, 9, 7, 8, 10, 12, 14, 16, 18, 13, 11];
+
+export type CustomerSegment = "VIP" | "Returning" | "New";
+
+export type Customer = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  bookings: number;
+  /** Total paid to the agency, in DA. */
+  totalSpent: number;
+  firstBooking: string;
+  lastTrip: string;
+  lastTripDate: string;
+};
+
+export const VIP_SPEND = 1_500_000;
+
+export function customerSegment(customer: Customer): CustomerSegment {
+  if (customer.totalSpent >= VIP_SPEND || customer.bookings >= 5) return "VIP";
+  return customer.bookings >= 2 ? "Returning" : "New";
+}
+
+export const AGENCY_CUSTOMERS: Customer[] = [
+  { id: "cus-01", name: "Lina Mansouri", email: "lina.mansouri@gmail.com", phone: "+213 555 21 34 87", city: "Alger", bookings: 6, totalSpent: 3_420_000, firstBooking: "2024-05-11", lastTrip: "Krabi Jungle Resort", lastTripDate: "2026-12-20" },
+  { id: "cus-02", name: "Amine Belkacem", email: "amine.belkacem@outlook.com", phone: "+213 661 45 12 90", city: "Blida", bookings: 3, totalSpent: 1_356_000, firstBooking: "2025-02-03", lastTrip: "Santorini Sunset Escape", lastTripDate: "2026-10-18" },
+  { id: "cus-03", name: "Yasmine Haddad", email: "yasmine.haddad@gmail.com", phone: "+213 770 88 21 03", city: "Oran", bookings: 2, totalSpent: 1_095_000, firstBooking: "2025-08-19", lastTrip: "Dubai Skyline & Desert", lastTripDate: "2026-10-24" },
+  { id: "cus-04", name: "Karim Boudiaf", email: "karim.boudiaf@yahoo.fr", phone: "+213 550 67 43 21", city: "Alger", bookings: 4, totalSpent: 1_612_000, firstBooking: "2024-09-27", lastTrip: "Paris in Bloom", lastTripDate: "2026-11-05" },
+  { id: "cus-05", name: "Sarah Benali", email: "sarah.benali@gmail.com", phone: "+213 662 10 98 54", city: "Tipaza", bookings: 1, totalSpent: 638_000, firstBooking: "2026-09-21", lastTrip: "Bali Temples & Lakes", lastTripDate: "2026-11-12" },
+  { id: "cus-06", name: "Mohamed Cherif", email: "m.cherif@gmail.com", phone: "+213 771 32 65 09", city: "Constantine", bookings: 2, totalSpent: 868_000, firstBooking: "2025-11-14", lastTrip: "Tokyo Neon Nights", lastTripDate: "2026-10-09" },
+  { id: "cus-07", name: "Rachid Kaci", email: "rachid.kaci@hotmail.com", phone: "+213 553 74 18 62", city: "Tizi Ouzou", bookings: 5, totalSpent: 1_284_000, firstBooking: "2024-04-02", lastTrip: "Kasbahs & Palm Oases", lastTripDate: "2026-09-20" },
+  { id: "cus-08", name: "Imane Rahmani", email: "imane.rahmani@gmail.com", phone: "+213 664 29 57 13", city: "Alger", bookings: 1, totalSpent: 0, firstBooking: "2026-08-30", lastTrip: "Ha Long Bay Cruise", lastTripDate: "2026-09-14" },
+  { id: "cus-09", name: "Walid Meziane", email: "walid.meziane@gmail.com", phone: "+213 772 46 80 35", city: "Béjaïa", bookings: 2, totalSpent: 1_046_000, firstBooking: "2025-06-08", lastTrip: "Santorini Sunset Escape", lastTripDate: "2026-09-02" },
+  { id: "cus-10", name: "Nour El Houda Saadi", email: "nour.saadi@gmail.com", phone: "+213 556 91 23 47", city: "Sétif", bookings: 1, totalSpent: 438_000, firstBooking: "2026-09-25", lastTrip: "Dubai Skyline & Desert", lastTripDate: "2026-10-30" },
+  { id: "cus-11", name: "Djamel Ouali", email: "djamel.ouali@gmail.com", phone: "+213 665 38 72 16", city: "Alger", bookings: 7, totalSpent: 2_874_000, firstBooking: "2024-03-20", lastTrip: "Bali Temples & Lakes", lastTripDate: "2026-07-14" },
+  { id: "cus-12", name: "Selma Brahimi", email: "selma.brahimi@outlook.com", phone: "+213 773 52 09 84", city: "Annaba", bookings: 2, totalSpent: 756_000, firstBooking: "2025-12-01", lastTrip: "Paris in Bloom", lastTripDate: "2026-04-18" },
+  { id: "cus-13", name: "Farid Khelifi", email: "farid.khelifi@gmail.com", phone: "+213 557 14 66 30", city: "Batna", bookings: 1, totalSpent: 459_000, firstBooking: "2026-09-10", lastTrip: "Tokyo Neon Nights", lastTripDate: "2026-10-26" },
+  { id: "cus-14", name: "Houria Benmoussa", email: "houria.benmoussa@yahoo.fr", phone: "+213 666 83 40 27", city: "Oran", bookings: 3, totalSpent: 1_190_000, firstBooking: "2025-03-15", lastTrip: "Santorini Sunset Escape", lastTripDate: "2026-06-21" },
+];
+/** Same 12 months one year earlier, in DA. */
+export const PLATFORM_MONTHLY_PREVIOUS = series([13.1, 15.4, 18.2, 15.6, 16.3, 18.9, 20.2, 23.1, 26.9, 28.4, 24.1, 22.2]);
+export const MONTHLY_BOOKINGS = [78, 92, 104, 86, 95, 108, 117, 135, 153, 161, 138, 129];
+export const MONTHLY_BOOKINGS_PREVIOUS = [71, 83, 90, 79, 84, 95, 104, 118, 134, 142, 124, 118];
+export const MONTHLY_CANCELLATIONS = [4, 5, 4, 3, 5, 4, 6, 5, 7, 6, 5, 4];
+
+export const TOP_DESTINATIONS: Array<{ name: string; country: string; bookings: number }> = [
+  { name: "Istanbul", country: "Turkey", bookings: 214 },
+  { name: "Dubai", country: "UAE", bookings: 186 },
+  { name: "Santorini", country: "Greece", bookings: 142 },
+  { name: "Djerba", country: "Tunisia", bookings: 131 },
+  { name: "Sharm El Sheikh", country: "Egypt", bookings: 118 },
+  { name: "Djanet", country: "Algeria", bookings: 97 },
+];
+
+export type BillingCycle = "Monthly" | "Yearly";
+export type SubscriptionStatus = "Active" | "Trial" | "Expired" | "Cancelled";
+
+export type Plan = {
+  id: AgencyPlan;
+  tagline: string;
+  /** Price per month in DA. A yearly subscription costs YEARLY_BILLED_MONTHS of it. */
+  monthlyPrice: number;
+  /** Maximum published offers, null for unlimited. */
+  offerLimit: number | null;
+  features: string[];
+};
+
+export const YEARLY_BILLED_MONTHS = 10;
+export const TRIAL_DAYS = 14;
+export const EXPIRING_SOON_DAYS = 14;
+
+export const PLANS: Plan[] = [
+  {
+    id: "Basic",
+    tagline: "For agencies getting started",
+    monthlyPrice: 9_900,
+    offerLimit: 10,
+    features: ["Up to 10 published offers", "Booking management", "Email support"],
+  },
+  {
+    id: "Pro",
+    tagline: "For growing agencies",
+    monthlyPrice: 19_900,
+    offerLimit: 30,
+    features: ["Up to 30 published offers", "Featured on the home page", "Sales statistics", "Priority support"],
+  },
+  {
+    id: "Premium",
+    tagline: "For established agencies",
+    monthlyPrice: 39_900,
+    offerLimit: null,
+    features: ["Unlimited offers", "Top placement in search", "Advanced statistics", "Dedicated account manager"],
+  },
+];
+
+export type Subscription = {
+  id: string;
+  agencyId: string;
+  plan: AgencyPlan;
+  billing: BillingCycle;
+  status: SubscriptionStatus;
+  startedAt: string;
+  /** Next renewal for active subscriptions, otherwise the day access ends or ended. */
+  endsAt: string;
+};
+
+export const SUBSCRIPTIONS: Subscription[] = [
+  { id: "sub-1", agencyId: "agc-1", plan: "Premium", billing: "Yearly", status: "Active", startedAt: "2026-03-12", endsAt: "2027-03-12" },
+  { id: "sub-2", agencyId: "agc-2", plan: "Pro", billing: "Monthly", status: "Active", startedAt: "2026-09-20", endsAt: "2026-10-20" },
+  { id: "sub-3", agencyId: "agc-3", plan: "Pro", billing: "Yearly", status: "Active", startedAt: "2025-10-14", endsAt: "2026-10-14" },
+  { id: "sub-4", agencyId: "agc-4", plan: "Basic", billing: "Monthly", status: "Active", startedAt: "2026-09-07", endsAt: "2026-10-07" },
+  { id: "sub-5", agencyId: "agc-5", plan: "Pro", billing: "Monthly", status: "Trial", startedAt: "2026-09-28", endsAt: "2026-10-12" },
+  { id: "sub-6", agencyId: "agc-6", plan: "Basic", billing: "Monthly", status: "Active", startedAt: "2026-09-21", endsAt: "2026-10-21" },
+  { id: "sub-7", agencyId: "agc-7", plan: "Basic", billing: "Monthly", status: "Expired", startedAt: "2026-07-14", endsAt: "2026-08-14" },
+  { id: "sub-8", agencyId: "agc-8", plan: "Pro", billing: "Monthly", status: "Trial", startedAt: "2026-09-30", endsAt: "2026-10-14" },
+  { id: "sub-9", agencyId: "agc-9", plan: "Basic", billing: "Yearly", status: "Active", startedAt: "2026-07-03", endsAt: "2027-07-03" },
+];
+
+export function billedPrice(plan: Plan, billing: BillingCycle): number {
+  return billing === "Yearly" ? plan.monthlyPrice * YEARLY_BILLED_MONTHS : plan.monthlyPrice;
+}
+
+/** Monthly recurring revenue from active subscriptions; yearly plans count as 1/12 of their price. */
+export function monthlyRecurringRevenue(subscriptions: Subscription[], plans: Plan[]): number {
+  return subscriptions.reduce((sum, sub) => {
+    if (sub.status !== "Active") return sum;
+    const plan = plans.find((p) => p.id === sub.plan);
+    if (!plan) return sum;
+    return sum + (sub.billing === "Yearly" ? billedPrice(plan, "Yearly") / 12 : plan.monthlyPrice);
+  }, 0);
+}
+
+/** MRR over the last 12 months as a share of today's value. */
+const MRR_GROWTH = [0.42, 0.47, 0.53, 0.57, 0.62, 0.68, 0.73, 0.79, 0.85, 0.9, 0.95, 1];
+
+export function mrrHistory(currentMrr: number): number[] {
+  return MRR_GROWTH.map((share) => Math.round(currentMrr * share));
+}
+
 export type OfferStatus = "Published" | "Draft";
 
 export type AgencyOffer = {

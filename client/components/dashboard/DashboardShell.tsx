@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -18,6 +19,21 @@ function initialsOf(name: string): string {
     .join("");
 }
 
+function Avatar({ name, url, className }: { name: string; url?: string | null; className: string }) {
+  if (url) {
+    return (
+      <span className={`relative shrink-0 overflow-hidden rounded-full ${className} bg-white!`}>
+        <Image src={url} alt={`${name} logo`} fill sizes="40px" unoptimized className="object-contain p-1" />
+      </span>
+    );
+  }
+  return (
+    <span className={`grid shrink-0 place-items-center rounded-full text-sm font-semibold ${className}`}>
+      {initialsOf(name)}
+    </span>
+  );
+}
+
 export function DashboardShell({
   variant,
   user,
@@ -25,7 +41,7 @@ export function DashboardShell({
   children,
 }: {
   variant: DashboardVariant;
-  user: { name: string; email: string };
+  user: { name: string; email: string; avatarUrl?: string | null };
   context: string;
   children: ReactNode;
 }) {
@@ -34,7 +50,6 @@ export function DashboardShell({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-  const initials = initialsOf(user.name);
 
   const signOut = async () => {
     setSigningOut(true);
@@ -114,9 +129,7 @@ export function DashboardShell({
             View website
           </Link>
           <div className="mt-3 flex items-center gap-3 rounded-2xl bg-white/5 p-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-coral text-sm font-semibold">
-              {initials}
-            </span>
+            <Avatar name={user.name} url={user.avatarUrl} className="size-10 bg-coral" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">{user.name}</p>
               <p className="truncate text-xs text-white/50">{user.email}</p>
@@ -147,9 +160,11 @@ export function DashboardShell({
             <Menu className="size-6" />
           </button>
           <p className="truncate text-sm font-medium text-ink/60">{context}</p>
-          <span className="ml-auto grid size-10 shrink-0 place-items-center rounded-full bg-ink text-sm font-semibold text-white">
-            {initials}
-          </span>
+          <Avatar
+            name={user.name}
+            url={user.avatarUrl}
+            className="ml-auto size-10 bg-ink text-white ring-1 ring-ink/10"
+          />
         </header>
 
         <main className="flex-1 px-4 py-8 sm:px-8">{children}</main>

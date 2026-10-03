@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 
 export const API_URL = process.env.API_URL ?? "http://localhost:4000";
-const SESSION_COOKIE = "access_token";
+export const SESSION_COOKIE = "access_token";
 
 export type SessionUser =
   | { id: string; role: "agency"; name: string; email: string; location: string; logo: string | null }

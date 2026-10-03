@@ -34,3 +34,24 @@ export function formatDate(iso: string): string {
   const [year, month, day] = iso.split("-").map(Number);
   return `${day} ${MONTHS[month - 1]} ${year}`;
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function parseISODate(iso: string): number {
+  const [year, month, day] = iso.split("-").map(Number);
+  return Date.UTC(year, month - 1, day);
+}
+
+/** Whole days from `from` to `to` (negative when `to` is earlier). Both are "YYYY-MM-DD". */
+export function daysBetween(from: string, to: string): number {
+  return Math.round((parseISODate(to) - parseISODate(from)) / DAY_MS);
+}
+
+/** "2026-01-31" + 1 month -> "2026-02-28": the day is clamped to the end of the target month. */
+export function addMonths(iso: string, months: number): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  const target = new Date(Date.UTC(year, month - 1 + months, 1));
+  const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+  target.setUTCDate(Math.min(day, lastDay));
+  return target.toISOString().slice(0, 10);
+}

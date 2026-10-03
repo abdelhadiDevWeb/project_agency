@@ -88,6 +88,7 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 
 - `globalLimiter`: applied to all requests.
 - `authLimiter`: stricter limiter for auth endpoints.
+- `uploadLimiter`: 20 image uploads per minute.
 - Uses Redis store when `REDIS_ENABLED=true`.
 
 ### HPP protection
@@ -144,8 +145,26 @@ When to enable:
   which emails exist. Rate limited by `authLimiter` (10/min).
 - On success the JWT (8 h) is set as an `httpOnly`, `SameSite=Lax` cookie (`Secure` in production).
   The Next.js app proxies `/api/*` to this server so the cookie is first-party.
-- The first super admin is created on boot from `DEFAULT_ADMIN_EMAIL` / `DEFAULT_ADMIN_PASSWORD` if that email
-  is not in `admin` yet. An existing admin is never overwritten; the password can be removed from `.env` afterwards.
+- The first super admin is created on boot from `DEFAULT_ADMIN_EMAIL` / `DEFAULT_ADMIN_PASSWORD` only when the
+  `admin` collection is empty, so changing the email from the profile page does not recreate the default account.
+  An existing admin is never overwritten; the password can be removed from `.env` afterwards.
+- Admins edit their own account only (the id comes from the token, never from the request). Changing the sign-in
+  email requires the current password; changing the password requires the current one and a new strong password.
+  Both endpoints share `authLimiter`.
+- Agencies follow the same rules for their own profile under `/api/agency/*` (role `agency` only; admins get `403`).
+
+### Image uploads (agency logo and stamp)
+
+**Files:** `server/lib/images.ts`, `server/services/branding.ts`, `server/routes/agency.ts`
+
+- Raw request body (no multipart parser), PNG / JPEG / WebP only, max 2 MB (`413` above, `415` for anything else).
+- The type is detected from the file's magic bytes, not from `Content-Type` or a file name; SVG is rejected.
+- Files get random server-generated names (`<agencyId>-<random>.<ext>`); stored names are re-validated before any
+  file system access, so path traversal is not possible. The previous file is deleted after a successful replace.
+- Logos are public (`/api/uploads/logos/*`, static, no directory listing, dotfiles denied).
+- Stamps (cachets) are private: stored outside the static folder and only streamed to the owning agency via
+  `GET /api/agency/branding/cachet` with `Cache-Control: private`.
+- `server/uploads/` is ignored by git. Back it up (or move to object storage) in production.
 
 **Still recommended before production:** account lockout/backoff per email, refresh tokens or shorter sessions,
 and `CSRF_ENABLED=true` if you add cookie-authenticated form posts from other sites.
@@ -185,6 +204,17 @@ Endpoints currently present:
   - Protected by `requireAuth`. Returns the signed-in agency or admin profile (never the password).
 - `POST /api/admin/agencies`
   - `super_admin` / `admin` only. Creates an agency; requires a strong password and at least one phone number.
+- `PATCH /api/admin/profile`
+  - `super_admin` / `admin` only. Updates `full_name` and `email` of the signed-in admin; a new email needs
+    `current_password` and must not belong to any agency or admin (`409`).
+- `POST /api/admin/profile/password`
+  - `super_admin` / `admin` only. Needs `current_password` and a strong `new_password` that differs from it.
+- `GET` / `PATCH /api/agency/profile`, `POST /api/agency/profile/password`
+  - `agency` only. Name, location, email (needs `current_password`) and 1–5 unique phone numbers.
+- `PUT` / `DELETE /api/agency/branding/:kind` (`logo` or `cachet`), `GET /api/agency/branding/cachet`
+  - `agency` only. See "Image uploads" above.
+- `GET /api/uploads/logos/:file`
+  - Public agency logos.
 
 ---
 

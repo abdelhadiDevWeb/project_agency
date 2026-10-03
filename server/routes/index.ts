@@ -1,4 +1,4 @@
-import { Router } from "express";
+import express, { Router } from "express";
 import Joi from "joi";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -9,13 +9,20 @@ import { ACCESS_COOKIE, requireAuth, sessionCookieOptions } from "../middleware/
 import { validate } from "../middleware/validate";
 import { authLimiter } from "../middleware/rateLimiters";
 import { findSessionUser } from "../services/accounts";
+import { LOGO_DIR } from "../services/branding";
 import { adminRouter } from "./admin";
+import { agencyRouter } from "./agency";
 import { authRouter } from "./auth";
 
 export const apiRouter = Router();
 
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/admin", adminRouter);
+apiRouter.use("/agency", agencyRouter);
+apiRouter.use(
+  "/uploads/logos",
+  express.static(LOGO_DIR, { index: false, dotfiles: "deny", redirect: false, maxAge: "30d", immutable: true })
+);
 
 apiRouter.get("/health", async (_req, res) => {
   const mongoReady = mongoose.connection.readyState === 1;

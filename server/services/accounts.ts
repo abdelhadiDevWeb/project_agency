@@ -4,6 +4,7 @@ import { burnPasswordCheck, verifyPassword } from "../lib/password";
 import type { JwtUser } from "../middleware/auth";
 import { Admin, ADMIN_ROLES, type AdminRole } from "../models/Admin";
 import { Agency } from "../models/Agency";
+import { logoUrl } from "./branding";
 
 export type SessionUser =
   | {
@@ -31,11 +32,11 @@ function agencyToSession(agency: AgencyFields): SessionUser {
     name: agency.name_agency,
     email: agency.email,
     location: agency.location,
-    logo: agency.logo ?? null,
+    logo: logoUrl(agency.logo),
   };
 }
 
-function adminToSession(admin: AdminFields): SessionUser {
+export function adminToSession(admin: AdminFields): SessionUser {
   return {
     id: String(admin._id),
     role: admin.role as AdminRole,

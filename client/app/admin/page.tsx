@@ -4,8 +4,10 @@ import { ArrowRight, Building2, CalendarCheck, Percent, Wallet } from "lucide-re
 import { BarChart, BookingsTable, Donut, PageHeader, Panel, StatCard, StatusBadge } from "@/components/dashboard/ui";
 import { formatDate, formatDZDCompact, formatNumber } from "@/lib/format";
 import { AGENCIES, BOOKINGS, PLATFORM_COMMISSION, PLATFORM_MONTHLY } from "@/lib/mock/dashboard";
+import { requireSpace } from "@/lib/session";
 
-export default function AdminOverviewPage() {
+export default async function AdminOverviewPage() {
+  await requireSpace("admin");
   const gmv = PLATFORM_MONTHLY.reduce((sum, m) => sum + m.value, 0);
   const commission = gmv * PLATFORM_COMMISSION;
   const totalBookings = AGENCIES.reduce((sum, a) => sum + a.bookings, 0);

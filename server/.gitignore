@@ -36,6 +36,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # local mongo data (dev without Windows service)
 .data/
 
+# uploaded agency logos and stamps
+uploads/
+
 # local mongo data
 .data/
 

@@ -12,8 +12,9 @@ export const metadata: Metadata = {
 export default async function AgencyLayout({ children }: { children: ReactNode }) {
   const user = await requireSpace("agency");
   const context = user.role === "agency" ? `${user.name} · ${user.location}` : user.name;
+  const avatarUrl = user.role === "agency" ? user.logo : null;
   return (
-    <DashboardShell variant="agency" user={{ name: user.name, email: user.email }} context={context}>
+    <DashboardShell variant="agency" user={{ name: user.name, email: user.email, avatarUrl }} context={context}>
       {children}
     </DashboardShell>
   );
